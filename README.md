@@ -14,9 +14,7 @@ This project is a modern web application for managing and visualizing energy con
     - Consumption and cost trends over time
     - Energy efficiency
 - **Data Table**: Presents all data in a tabular format with sorting and pagination options.
-- **Entry Form**: Allows users to add new consumption records.
 - **Responsive Design**: Adaptable interface for both mobile and desktop devices.
-- **Dark Mode**: Option to switch between light and dark modes.
 
 ## Technologies Used
 
