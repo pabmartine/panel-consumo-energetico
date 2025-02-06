@@ -33,7 +33,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 }`}
               >
                 <Home className="h-5 w-5 mr-2" />
-                <span>Inicio</span>
+                <span className="hidden md:inline">Inicio</span>
               </Link>
               <Link
                 href="/graficos"
@@ -44,7 +44,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 }`}
               >
                 <BarChart2 className="h-5 w-5 mr-2" />
-                <span>Gráficos</span>
+                <span className="hidden md:inline">Gráficos</span>
               </Link>
               <Link
                 href="/tabla"
@@ -55,7 +55,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 }`}
               >
                 <Table className="h-5 w-5 mr-2" />
-                <span>Tabla</span>
+                <span className="hidden md:inline">Tabla</span>
               </Link>
             </div>
           </div>
