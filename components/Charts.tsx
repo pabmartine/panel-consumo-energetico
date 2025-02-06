@@ -18,26 +18,50 @@ import {
 } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { Maximize2 } from "lucide-react"
+import ChartModal from "./ChartModal"
+import { useIsMobile } from "@/hooks/useIsMobile"
 
 interface DataItem {
   [key: string]: string | number
 }
 
 interface ChartsProps {
-  data: DataItem[]
+  initialData: DataItem[]
 }
 
 const COLORS = {
-  water: "#3b82f6", // azul (sin cambios)
-  heat: "#ef4444", // rojo (cambiado de naranja)
-  cold: "#eab308", // amarillo mostaza (cambiado de amarillo brillante)
-  fixed: "#8b5cf6", // violeta (sin cambios)
-  service: "#10b981", // verde (sin cambios)
-  total: "#8b5cf6", // violeta (cambiado de rojo)
+  water: "#3b82f6",
+  heat: "#ef4444",
+  cold: "#eab308",
+  fixed: "#8b5cf6",
+  service: "#10b981",
+  total: "#8b5cf6",
 }
 
-export default function Charts({ data }: ChartsProps) {
+export default function Charts({ initialData }: ChartsProps) {
   const [timeFrame, setTimeFrame] = useState("monthly")
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean
+    title: string
+    data: any[]
+    type: "line" | "bar"
+    dataKey: string
+    color: string
+  }>({
+    isOpen: false,
+    title: "",
+    data: [],
+    type: "line",
+    dataKey: "",
+    color: "",
+  })
+  const isMobile = useIsMobile()
+
+  if (!initialData || initialData.length === 0) {
+    return <div>No hay datos disponibles para mostrar.</div>
+  }
 
   const processData = (rawData: DataItem[], frame: string) => {
     if (frame === "monthly") return rawData
@@ -59,48 +83,48 @@ export default function Charts({ data }: ChartsProps) {
     return yearlyData
   }
 
-  const processedData = processData(data || [], timeFrame);
+  const processedData = processData(initialData, timeFrame)
 
   // Datos para las gráficas individuales
-  const waterConsumptionData = (processedData || []).map((item) => ({
+  const waterConsumptionData = processedData.map((item) => ({
     period: timeFrame === "monthly" ? item["Periodo Fin"] : item.year,
     value: item["Consumo Agua (m³)"],
   }))
 
-  const heatConsumptionData = (processedData || []).map((item) => ({
+  const heatConsumptionData = processedData.map((item) => ({
     period: timeFrame === "monthly" ? item["Periodo Fin"] : item.year,
     value: item["Consumo Energia Calor (MWh)"],
   }))
 
-  const coldConsumptionData = (processedData || []).map((item) => ({
+  const coldConsumptionData = processedData.map((item) => ({
     period: timeFrame === "monthly" ? item["Periodo Fin"] : item.year,
     value: item["Consumo Energia Frio (MWh)"],
   }))
 
-  const waterCostData = (processedData || []).map((item) => ({
+  const waterCostData = processedData.map((item) => ({
     period: timeFrame === "monthly" ? item["Periodo Fin"] : item.year,
     value: item["Costo Agua (€)"],
   }))
 
-  const heatCostData = (processedData || []).map((item) => ({
+  const heatCostData = processedData.map((item) => ({
     period: timeFrame === "monthly" ? item["Periodo Fin"] : item.year,
     value: item["Costo Energia Calor (€)"],
   }))
 
-  const coldCostData = (processedData || []).map((item) => ({
+  const coldCostData = processedData.map((item) => ({
     period: timeFrame === "monthly" ? item["Periodo Fin"] : item.year,
     value: item["Costo Energia Frio (€)"],
   }))
 
   // Datos para las gráficas existentes
-  const consumptionData = (processedData || []).map((item) => ({
+  const consumptionData = processedData.map((item) => ({
     period: timeFrame === "monthly" ? item["Periodo Fin"] : item.year,
     agua: item["Consumo Agua (m³)"],
     calor: item["Consumo Energia Calor (MWh)"],
     frio: item["Consumo Energia Frio (MWh)"],
   }))
 
-  const costData = (processedData || []).map((item) => ({
+  const costData = processedData.map((item) => ({
     period: timeFrame === "monthly" ? item["Periodo Fin"] : item.year,
     agua: item["Costo Agua (€)"],
     calor: item["Costo Energia Calor (€)"],
@@ -123,7 +147,7 @@ export default function Charts({ data }: ChartsProps) {
     { name: "Cuota Servicio", value: processedData.reduce((sum, item) => sum + Number(item["Cuota Servicio (€)"]), 0) },
   ]
 
-  const consumptionEvolution = (processedData || []).map((item) => ({
+  const consumptionEvolution = processedData.map((item) => ({
     period: timeFrame === "monthly" ? item["Periodo Fin"] : item.year,
     "Consumo Total":
       Number(item["Consumo Agua (m³)"]) +
@@ -131,7 +155,7 @@ export default function Charts({ data }: ChartsProps) {
       Number(item["Consumo Energia Frio (MWh)"]),
   }))
 
-  const costEvolution = (processedData || []).map((item) => ({
+  const costEvolution = processedData.map((item) => ({
     period: timeFrame === "monthly" ? item["Periodo Fin"] : item.year,
     "Costo Total": Number(item["Costo Total (€)"]),
   }))
@@ -144,15 +168,31 @@ export default function Charts({ data }: ChartsProps) {
     return totalEnergy > 0 ? Number(item["Costo Total (€)"]) / totalEnergy : 0
   }
 
-  const efficiencyData = (processedData || []).map((item) => ({
+  const efficiencyData = processedData.map((item) => ({
     period: timeFrame === "monthly" ? item["Periodo Fin"] : item.year,
     "Eficiencia (€/unidad)": calculateEfficiency(item),
   }))
 
   const renderLineChart = (data: any[], title: string, unit: string, color: string) => (
-    <Card>
+    <Card className="relative group">
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle
+          className={isMobile ? "cursor-pointer" : ""}
+          onClick={() => {
+            if (isMobile) {
+              setModalConfig({
+                isOpen: true,
+                title,
+                data,
+                type: "line",
+                dataKey: "value",
+                color,
+              })
+            }
+          }}
+        >
+          {title}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
@@ -173,6 +213,25 @@ export default function Charts({ data }: ChartsProps) {
             <Line type="monotone" dataKey="value" name={title} stroke={color} />
           </LineChart>
         </ResponsiveContainer>
+        {!isMobile && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={() =>
+              setModalConfig({
+                isOpen: true,
+                title,
+                data,
+                type: "line",
+                dataKey: "value",
+                color,
+              })
+            }
+          >
+            <Maximize2 className="h-4 w-4" />
+          </Button>
+        )}
       </CardContent>
     </Card>
   )
@@ -200,9 +259,25 @@ export default function Charts({ data }: ChartsProps) {
         {renderLineChart(coldCostData, "Costo de Energía Frío", "€", COLORS.cold)}
 
         {/* Gráficas existentes */}
-        <Card>
+        <Card className="relative group">
           <CardHeader>
-            <CardTitle>Consumo por Tipo de Energía</CardTitle>
+            <CardTitle
+              className={isMobile ? "cursor-pointer" : ""}
+              onClick={() => {
+                if (isMobile) {
+                  setModalConfig({
+                    isOpen: true,
+                    title: "Consumo por Tipo de Energía",
+                    data: consumptionData,
+                    type: "bar",
+                    dataKey: "agua",
+                    color: COLORS.water,
+                  })
+                }
+              }}
+            >
+              Consumo por Tipo de Energía
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -222,12 +297,47 @@ export default function Charts({ data }: ChartsProps) {
                 <Bar dataKey="frio" name="Frío (MWh)" fill={COLORS.cold} />
               </BarChart>
             </ResponsiveContainer>
+            {!isMobile && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() =>
+                  setModalConfig({
+                    isOpen: true,
+                    title: "Consumo por Tipo de Energía",
+                    data: consumptionData,
+                    type: "bar",
+                    dataKey: "agua",
+                    color: COLORS.water,
+                  })
+                }
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            )}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative group">
           <CardHeader>
-            <CardTitle>Costo por Tipo de Energía</CardTitle>
+            <CardTitle
+              className={isMobile ? "cursor-pointer" : ""}
+              onClick={() => {
+                if (isMobile) {
+                  setModalConfig({
+                    isOpen: true,
+                    title: "Costo por Tipo de Energía",
+                    data: costData,
+                    type: "bar",
+                    dataKey: "agua",
+                    color: COLORS.water,
+                  })
+                }
+              }}
+            >
+              Costo por Tipo de Energía
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -247,12 +357,47 @@ export default function Charts({ data }: ChartsProps) {
                 <Bar dataKey="frio" name="Frío" fill={COLORS.cold} />
               </BarChart>
             </ResponsiveContainer>
+            {!isMobile && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() =>
+                  setModalConfig({
+                    isOpen: true,
+                    title: "Costo por Tipo de Energía",
+                    data: costData,
+                    type: "bar",
+                    dataKey: "agua",
+                    color: COLORS.water,
+                  })
+                }
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            )}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative group">
           <CardHeader>
-            <CardTitle>Distribución Total de Costos</CardTitle>
+            <CardTitle
+              className={isMobile ? "cursor-pointer" : ""}
+              onClick={() => {
+                if (isMobile) {
+                  setModalConfig({
+                    isOpen: true,
+                    title: "Distribución Total de Costos",
+                    data: distributionData,
+                    type: "bar",
+                    dataKey: "value",
+                    color: COLORS.water,
+                  })
+                }
+              }}
+            >
+              Distribución Total de Costos
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -289,12 +434,47 @@ export default function Charts({ data }: ChartsProps) {
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
+            {!isMobile && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() =>
+                  setModalConfig({
+                    isOpen: true,
+                    title: "Distribución Total de Costos",
+                    data: distributionData,
+                    type: "bar",
+                    dataKey: "value",
+                    color: COLORS.water,
+                  })
+                }
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            )}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative group">
           <CardHeader>
-            <CardTitle>Evolución del Consumo</CardTitle>
+            <CardTitle
+              className={isMobile ? "cursor-pointer" : ""}
+              onClick={() => {
+                if (isMobile) {
+                  setModalConfig({
+                    isOpen: true,
+                    title: "Evolución del Consumo",
+                    data: consumptionEvolution,
+                    type: "line",
+                    dataKey: "Consumo Total",
+                    color: COLORS.total,
+                  })
+                }
+              }}
+            >
+              Evolución del Consumo
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -312,12 +492,47 @@ export default function Charts({ data }: ChartsProps) {
                 <Line type="monotone" dataKey="Consumo Total" stroke={COLORS.total} />
               </LineChart>
             </ResponsiveContainer>
+            {!isMobile && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() =>
+                  setModalConfig({
+                    isOpen: true,
+                    title: "Evolución del Consumo",
+                    data: consumptionEvolution,
+                    type: "line",
+                    dataKey: "Consumo Total",
+                    color: COLORS.total,
+                  })
+                }
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            )}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative group">
           <CardHeader>
-            <CardTitle>Evolución del Costo</CardTitle>
+            <CardTitle
+              className={isMobile ? "cursor-pointer" : ""}
+              onClick={() => {
+                if (isMobile) {
+                  setModalConfig({
+                    isOpen: true,
+                    title: "Evolución del Costo",
+                    data: costEvolution,
+                    type: "line",
+                    dataKey: "Costo Total",
+                    color: COLORS.total,
+                  })
+                }
+              }}
+            >
+              Evolución del Costo
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -335,12 +550,47 @@ export default function Charts({ data }: ChartsProps) {
                 <Line type="monotone" dataKey="Costo Total" stroke={COLORS.total} />
               </LineChart>
             </ResponsiveContainer>
+            {!isMobile && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() =>
+                  setModalConfig({
+                    isOpen: true,
+                    title: "Evolución del Costo",
+                    data: costEvolution,
+                    type: "line",
+                    dataKey: "Costo Total",
+                    color: COLORS.total,
+                  })
+                }
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            )}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative group">
           <CardHeader>
-            <CardTitle>Eficiencia Energética</CardTitle>
+            <CardTitle
+              className={isMobile ? "cursor-pointer" : ""}
+              onClick={() => {
+                if (isMobile) {
+                  setModalConfig({
+                    isOpen: true,
+                    title: "Eficiencia Energética",
+                    data: efficiencyData,
+                    type: "line",
+                    dataKey: "Eficiencia (€/unidad)",
+                    color: "#22c55e",
+                  })
+                }
+              }}
+            >
+              Eficiencia Energética
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -355,12 +605,40 @@ export default function Charts({ data }: ChartsProps) {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="Eficiencia (€/unidad)" stroke={COLORS.service} />
+                <Line type="monotone" dataKey="Eficiencia (€/unidad)" stroke="#22c55e" />
               </LineChart>
             </ResponsiveContainer>
+            {!isMobile && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() =>
+                  setModalConfig({
+                    isOpen: true,
+                    title: "Eficiencia Energética",
+                    data: efficiencyData,
+                    type: "line",
+                    dataKey: "Eficiencia (€/unidad)",
+                    color: "#22c55e",
+                  })
+                }
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
+      <ChartModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        title={modalConfig.title}
+        data={modalConfig.data}
+        type={modalConfig.type}
+        dataKey={modalConfig.dataKey}
+        color={modalConfig.color}
+      />
     </div>
   )
 }
