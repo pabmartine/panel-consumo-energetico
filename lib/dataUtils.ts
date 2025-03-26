@@ -425,6 +425,22 @@ const mockedData: DataItem[] = [
     "Cuota Servicio (€)": 3.58,
     "Costo Total (€)": 284.52,
   },
+  {
+    "Numero Recibo": "2025/2291",
+    "Periodo Inicio": "22/01/2025",
+    "Periodo Fin": "21/03/2025",
+    "Consumo Agua (m³)": 0.0,
+    "Costo Agua (€)": 31.79,
+    "Consumo Energia Calor (MWh)": 1.635,
+    "Costo Energia Calor (€)": 165.29,
+    "Consumo Energia Frio (MWh)": 0.0,
+    "Costo Energia Frio (€)": 0.0,
+    "Fijo Encendido Caldera ACS (€)": 10.0,
+    "Fijo Encendido Caldera Calefacción (€)": 20.0,
+    "Cuota Servicio (€)": 3.58,
+    "Costo Total (€)": 197.08
+  }
+
 ]
 
 export async function fetchAndProcessData() {
