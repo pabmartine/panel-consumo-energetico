@@ -439,7 +439,23 @@ const mockedData: DataItem[] = [
     "Fijo Encendido Caldera Calefacción (€)": 20.0,
     "Cuota Servicio (€)": 3.58,
     "Costo Total (€)": 197.08
+  },
+  {
+    "Numero Recibo": "2025/4140",
+    "Periodo Inicio": "21/03/2025",
+    "Periodo Fin": "20/05/2025",
+    "Consumo Agua (m³)": 4.0,
+    "Costo Agua (€)": 40.0,
+    "Consumo Energia Calor (MWh)": 0.706,
+    "Costo Energia Calor (€)": 70.60,
+    "Consumo Energia Frio (MWh)": 0.0,
+    "Costo Energia Frio (€)": 0.0,
+    "Fijo Encendido Caldera ACS (€)": 10.0,
+    "Fijo Encendido Caldera Calefacción (€)": 20.0,
+    "Cuota Servicio (€)": 3.58,
+    "Costo Total (€)": 144.18
   }
+
 
 ]
 
